@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Özel Okul Ödeme Planı Hesaplayıcı (MVP)</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#121a33;
+      --muted:#93a4c7;
+      --text:#eaf0ff;
+      --line:#26325a;
+      --good:#4ade80;
+      --bad:#fb7185;
+      --warn:#fbbf24;
+      --accent:#60a5fa;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", Helvetica, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(96,165,250,.20), transparent 55%),
+                  radial-gradient(900px 700px at 90% 10%, rgba(74,222,128,.14), transparent 50%),
+                  radial-gradient(1000px 800px at 60% 100%, rgba(251,191,36,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      max-width:1200px;
+      margin: 22px auto 10px;
+      padding: 0 18px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .brand h1{
+      font-size: 20px;
+      margin:0 0 6px 0;
+      letter-spacing:.2px;
+    }
+    .brand p{
+      margin:0;
+      color:var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+      max-width: 64ch;
+    }
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:8px 12px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:999px;
+      color:var(--muted);
+      font-size:12px;
+      background: rgba(18,26,51,.65);
+      box-shadow: var(--shadow);
+      white-space:nowrap;
+    }
+    main{
+      max-width:1200px;
+      margin: 12px auto 46px;
+      padding: 0 18px;
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 16px;
+    }
+    @media (max-width: 980px){
+      main{ grid-template-columns: 1fr; }
+      header{ flex-direction:column; }
+      .pill{ width: fit-content; }
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(18,26,51,.95), rgba(18,26,51,.78));
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: 16px 16px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+    }
+    .card .hd h2{
+      margin:0;
+      font-size: 15px;
+      letter-spacing:.2px;
+    }
+    .card .hd small{
+      display:block;
+      margin-top:6px;
+      color:var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .card .bd{ padding: 16px; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 640px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    label{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 7px;
+    }
+    select, input[type="number"], input[type="text"], textarea{
+      width:100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(9,13,28,.55);
+      color: var(--text);
+      outline:none;
+    }
+    textarea{
+      min-height: 180px;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.35;
+      resize: vertical;
+    }
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .check{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 12px;
+      background: rgba(9,13,28,.35);
+    }
+    .check input{ transform: scale(1.05); }
+    .check span{ font-size: 13px; color: var(--text); }
+    .hint{
+      margin-top:6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .btnbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 12px;
+    }
+    button{
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(96,165,250,.18);
+      color: var(--text);
+      padding: 11px 14px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight: 600;
+      letter-spacing:.2px;
+    }
+    button:hover{ filter: brightness(1.08); }
+    button.secondary{
+      background: rgba(148,163,184,.12);
+    }
+    button.danger{
+      background: rgba(251,113,133,.15);
+    }
+
+    .kpis{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 640px){
+      .kpis{ grid-template-columns: 1fr; }
+    }
+    .kpi{
+      padding: 14px 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      background: rgba(9,13,28,.35);
+    }
+    .kpi .t{ color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+    .kpi .v{ font-size: 18px; font-weight: 800; letter-spacing:.2px; }
+    .kpi .s{ margin-top:6px; font-size: 12px; color: var(--muted); }
+
+    .breakdown{
+      margin-top: 14px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      padding-top: 14px;
+      display:grid;
+      gap: 8px;
+    }
+    .lineItem{
+      display:flex;
+      justify-content:space-between;
+      align-items:baseline;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(9,13,28,.32);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .lineItem .l{ color: var(--muted); font-size: 12px; }
+    .lineItem .r{ font-weight: 700; }
+
+    table{
+      width:100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow:hidden;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(9,13,28,.35);
+      margin-top: 12px;
+    }
+    th, td{
+      padding: 10px 10px;
+      text-align:left;
+      font-size: 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    th{
+      color: var(--muted);
+      font-weight: 700;
+      background: rgba(18,26,51,.55);
+    }
+    tr:last-child td{ border-bottom: 0; }
+    .note{
+      margin-top: 12px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(251,191,36,.08);
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .muted{ color: var(--muted); }
+    .mono{ font-family: var(--mono); }
+    .tag{
+      display:inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14);
+      color: var(--muted);
+      font-size: 11px;
+      margin-right: 6px;
+      background: rgba(9,13,28,.35);
+    }
+    .footer{
+      max-width:1200px;
+      margin: 0 auto;
+      padding: 0 18px 26px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .ok{ color: var(--good); font-weight: 700; }
+    .warn{ color: var(--warn); font-weight: 700; }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="brand">
+    <h1>Ödeme Planı Hesaplayıcı (MVP)</h1>
+    <p>
+      PDF’lerde kaybolma sorununu çözmek için: <span class="tag">Okul</span><span class="tag">Dönem</span><span class="tag">Kayıt Tipi</span><span class="tag">Taksit</span>
+      seç → sistem <b>net toplam</b> ve <b>taksit takvimini</b> üretir.
+      <span class="muted">Bu bir prototip: veriyi JSON olarak düzenleyebilirsin.</span>
+    </p>
+  </div>
+  <div class="pill">
+    <span class="mono">Tek dosya demo</span> • <span class="mono">HTML + JS</span>
+  </div>
+</header>
+
+<main>
+  <!-- LEFT: INPUTS -->
+  <section class="card">
+    <div class="hd">
+      <div>
+        <h2>1) Kullanıcı Formu</h2>
+        <small>Okul/plan seç → ödeme parametrelerini gir → “Hesapla”.</small>
+      </div>
+      <div class="row">
+        <button class="secondary" id="btnLoadSample">Örnek Veriyi Yükle</button>
+      </div>
+    </div>
+
+    <div class="bd">
+      <div class="grid">
+        <div>
+          <label>Okul</label>
+          <select id="schoolSelect"></select>
+          <div class="hint" id="schoolMeta"></div>
+        </div>
+
+        <div>
+          <label>Dönem</label>
+          <select id="yearSelect"></select>
+          <div class="hint" id="yearMeta"></div>
+        </div>
+
+        <div>
+          <label>Kayıt Tipi</label>
+          <select id="planType">
+            <option value="RENEWAL">Kayıt Yenileme</option>
+            <option value="NEW">Yeni Kayıt</option>
+          </select>
+          <div class="hint">Her okulda ayrı fiyat/teminat olabilir.</div>
+        </div>
+
+        <div>
+          <label>Taksit Seçeneği</label>
+          <select id="installments"></select>
+          <div class="hint" id="installmentMeta"></div>
+        </div>
+
+        <div>
+          <label>Başlangıç Ayı (taksit takvimi)</label>
+          <select id="startMonth">
+            <option value="2026-02">Şubat 2026</option>
+            <option value="2026-03">Mart 2026</option>
+            <option value="2026-04">Nisan 2026</option>
+            <option value="2026-05">Mayıs 2026</option>
+            <option value="2026-06">Haziran 2026</option>
+            <option value="2026-07">Temmuz 2026</option>
+            <option value="2026-08">Ağustos 2026</option>
+            <option value="2026-09" selected>Eylül 2026</option>
+          </select>
+          <div class="hint">Prototipte ayları eşit dağıtıyoruz (gerçekte okul kuralına göre ayarlanır).</div>
+        </div>
+
+        <div>
+          <label>OSP (Okul Sonrası Program) Aylık Ücret (opsiyonel)</label>
+          <input id="ospMonthly" type="number" min="0" step="1" placeholder="örn: 0 veya 3500" />
+          <div class="hint">Aylık x (uygulanan ay sayısı) = addon toplamı.</div>
+        </div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="row">
+        <div class="check">
+          <input id="depositPayNow" type="checkbox" checked />
+          <span>Teminatı peşin öde (taksitlere bölme)</span>
+        </div>
+        <div class="check">
+          <input id="depositIncludedInTotal" type="checkbox" checked />
+          <span>Teminatı toplamda göster (total içine dahil)</span>
+        </div>
+        <div class="check">
+          <input id="addonSpread" type="checkbox" checked />
+          <span>OSP’yi taksitlere yay</span>
+        </div>
+      </div>
+
+      <div class="btnbar">
+        <button id="btnCalc">Hesapla</button>
+        <button class="secondary" id="btnShare">Paylaşılabilir Link Oluştur</button>
+        <button class="danger" id="btnReset">Sıfırla</button>
+      </div>
+
+      <div class="note" id="shareBox" style="display:none;">
+        <div class="mono" id="shareUrl"></div>
+        <div class="hint">Bu URL’yi kopyalayıp açınca aynı seçimlerle sayfa açılır.</div>
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="card" style="background: rgba(9,13,28,.22); border-color: rgba(255,255,255,.10);">
+        <div class="hd" style="border-bottom-color: rgba(255,255,255,.08);">
+          <div>
+            <h2>2) Veri (JSON) — Admin yerine hızlı demo</h2>
+            <small>Buradaki fiyatları değiştirip “Veriyi Uygula” diyebilirsin.</small>
+          </div>
+          <div class="row">
+            <button class="secondary" id="btnApplyData">Veriyi Uygula</button>
+          </div>
+        </div>
+        <div class="bd">
+          <textarea id="dataJson" spellcheck="false"></textarea>
+          <div class="hint">
+            <span class="ok">İpucu:</span> KDV dahil tutarları baz aldım. İstersen KDV hariç girip hesaplatacak şekilde de genişletilir.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- RIGHT: OUTPUT -->
+  <section class="card">
+    <div class="hd">
+      <div>
+        <h2>Sonuç</h2>
+        <small>Toplam, kırılım ve taksit planı burada oluşur.</small>
+      </div>
+      <div class="pill">
+        <span class="mono" id="statusPill">Hazır</span>
+      </div>
+    </div>
+
+    <div class="bd">
+      <div class="kpis">
+        <div class="kpi">
+          <div class="t">Toplam Ödenecek</div>
+          <div class="v" id="kpiTotal">—</div>
+          <div class="s" id="kpiTotalSub">—</div>
+        </div>
+        <div class="kpi">
+          <div class="t">İskonto</div>
+          <div class="v" id="kpiDiscount">—</div>
+          <div class="s" id="kpiDiscountSub">—</div>
+        </div>
+      </div>
+
+      <div class="breakdown" id="breakdown">
+        <!-- line items injected -->
+      </div>
+
+      <div style="height:10px"></div>
+
+      <div class="muted" style="font-size:12px; margin-top:6px;">
+        <b>Taksit Planı</b> <span class="muted">(eşit dağıtım — okul kuralına göre özelleştirilebilir)</span>
+      </div>
+
+      <table id="scheduleTable">
+        <thead>
+          <tr>
+            <th>Ay</th>
+            <th>Açıklama</th>
+            <th>Tutar</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="note" id="planNotes" style="display:none;"></div>
+    </div>
+  </section>
+</main>
+
+<div class="footer">
+  <div>
+    <b>Nasıl büyütülür?</b> PDF’lerden otomatik çıkarım (v2) + okul bazlı kurallar (teminat iade, tatil, KDV değişimi, farklı taksit kuralı) + admin panel.
+  </div>
+  <div style="margin-top:6px;">
+    <span class="warn">Not:</span> Bu demo “hesaplama mantığı” prototipidir; gerçek okul sözleşmesi/hukuki şartlar için doğrulama gerekir.
+  </div>
+</div>
+
+<script>
+  // ---------------------------
+  // Utilities
+  // ---------------------------
+  const fmtTRY = (n) => {
+    if (!isFinite(n)) return "—";
+    return new Intl.NumberFormat("tr-TR", { style:"currency", currency:"TRY", maximumFractionDigits: 2 }).format(n);
+  };
+  const fmtPct = (p) => new Intl.NumberFormat("tr-TR", { style:"percent", maximumFractionDigits: 2 }).format(p);
+  const qs = (id) => document.getElementById(id);
+
+  function addMonths(ym, add){
+    // ym: "YYYY-MM"
+    const [y, m] = ym.split("-").map(Number);
+    const d = new Date(Date.UTC(y, m - 1, 1));
+    d.setUTCMonth(d.getUTCMonth() + add);
+    const yy = d.getUTCFullYear();
+    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+    return `${yy}-${mm}`;
+  }
+  function monthLabel(ym){
+    const [y, m] = ym.split("-").map(Number);
+    const d = new Date(Date.UTC(y, m-1, 1));
+    return d.toLocaleDateString("tr-TR", { year:"numeric", month:"long", timeZone:"UTC" });
+  }
+
+  // ---------------------------
+  // Sample data (represents what you'd store in DB)
+  // ---------------------------
+  const SAMPLE_DATA = {
+    version: "0.1",
+    currency: "TRY",
+    schools: [
+      {
+        id: "yenimevsim",
+        name: "Özel Kozyatağı Yeni Mevsim Anaokulu",
+        city: "İstanbul",
+        meta: {
+          source: "PDF",
+          periodStart: "2026-09-07",
+          periodEnd: "2027-06-25"
+        },
+        academicYears: [
+          {
+            id: "2026-2027",
+            label: "2026–2027",
+            vatRate: 0.10,
+            monthsCount: 10,
+            notes: [
+              "Ücretler 10 aylık eğitim dönemi içindir.",
+              "Teminat ödenmezse ve kayıt iptal edilirse iade edilmez.",
+              "Resmi tatil/salgın vb. durumlarda ücret iadesi yapılmaz.",
+              "Ödeme tarih aralığı okul tarafından güncellenebilir."
+            ],
+            plans: [
+              {
+                planType: "RENEWAL",
+                label: "Kayıt Yenileme",
+                tuitionVatIncluded: 717750.00,  // 10 aylık eğitim ücreti (KDV dahil)
+                depositVatIncluded: 79750.00,   // teminat (KDV dahil)
+                installmentOptions: [
+                  { count: 1, discountRate: 0.15, label: "Peşin (%15)" },
+                  { count: 3, discountRate: 0.10, label: "3 Taksit (%10)" },
+                  { count: 6, discountRate: 0.08, label: "6 Taksit (%8)" },
+                  { count: 10, discountRate: 0.05, label: "10 Taksit (%5)" },
+                  { count: 12, discountRate: 0.00, label: "12 Taksit" }
+                ]
+              },
+              {
+                planType: "NEW",
+                label: "Yeni Kayıt",
+                tuitionVatIncluded: 747450.00,
+                depositVatIncluded: 83050.00,
+                installmentOptions: [
+                  { count: 1, discountRate: 0.15, label: "Peşin (%15)" },
+                  { count: 3, discountRate: 0.10, label: "3 Taksit (%10)" },
+                  { count: 6, discountRate: 0.08, label: "6 Taksit (%8)" },
+                  { count: 10, discountRate: 0.05, label: "10 Taksit (%5)" },
+                  { count: 12, discountRate: 0.00, label: "12 Taksit" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  };
+
+  // ---------------------------
+  // State
+  // ---------------------------
+  let DATA = structuredClone(SAMPLE_DATA);
+
+  function getSchool(){
+    const schoolId = qs("schoolSelect").value;
+    return DATA.schools.find(s => s.id === schoolId);
+  }
+  function getYear(){
+    const school = getSchool();
+    const yearId = qs("yearSelect").value;
+    return school?.academicYears.find(y => y.id === yearId);
+  }
+  function getPlan(){
+    const year = getYear();
+    const type = qs("planType").value;
+    return year?.plans.find(p => p.planType === type);
+  }
+  function getInstallmentOption(){
+    const plan = getPlan();
+    const cnt = Number(qs("installments").value);
+    return plan?.installmentOptions.find(o => o.count === cnt);
+  }
+
+  // ---------------------------
+  // UI populate
+  // ---------------------------
+  function populateSchools(){
+    const sel = qs("schoolSelect");
+    sel.innerHTML = "";
+    for (const s of DATA.schools){
+      const opt = document.createElement("option");
+      opt.value = s.id;
+      opt.textContent = s.name;
+      sel.appendChild(opt);
+    }
+  }
+  function populateYears(){
+    const school = getSchool();
+    const sel = qs("yearSelect");
+    sel.innerHTML = "";
+    for (const y of school.academicYears){
+      const opt = document.createElement("option");
+      opt.value = y.id;
+      opt.textContent = y.label;
+      sel.appendChild(opt);
+    }
+  }
+  function populateInstallments(){
+    const plan = getPlan();
+    const sel = qs("installments");
+    sel.innerHTML = "";
+    for (const o of plan.installmentOptions){
+      const opt = document.createElement("option");
+      opt.value = o.count;
+      opt.textContent = o.label || (o.count === 1 ? "Peşin" : `${o.count} Taksit`);
+      sel.appendChild(opt);
+    }
+    // default: 10 taksit varsa seç, yoksa ilk
+    const has10 = plan.installmentOptions.some(x => x.count === 10);
+    sel.value = has10 ? "10" : String(plan.installmentOptions[0]?.count ?? 1);
+  }
+
+  function refreshMeta(){
+    const school = getSchool();
+    const year = getYear();
+    if (school){
+      qs("schoolMeta").textContent = `${school.city} • Dönem: ${school.meta?.periodStart ?? "—"} → ${school.meta?.periodEnd ?? "—"}`;
+    }
+    if (year){
+      qs("yearMeta").textContent = `KDV: ${fmtPct(year.vatRate)} • Eğitim ayı: ${year.monthsCount}`;
+    }
+    const opt = getInstallmentOption();
+    if (opt){
+      qs("installmentMeta").textContent = `İskonto: ${fmtPct(opt.discountRate)} • Taksit sayısı: ${opt.count}`;
+    }
+  }
+
+  // ---------------------------
+  // Calculation
+  // ---------------------------
+  function calculate(){
+    const school = getSchool();
+    const year = getYear();
+    const plan = getPlan();
+    const opt = getInstallmentOption();
+
+    if (!school || !year || !plan || !opt){
+      setStatus("Eksik seçim", true);
+      return;
+    }
+
+    const tuition = Number(plan.tuitionVatIncluded);   // KDV dahil varsayıyoruz
+    const deposit = Number(plan.depositVatIncluded);
+    const discountRate = Number(opt.discountRate);
+
+    const ospMonthly = Number(qs("ospMonthly").value || 0);
+    const monthsCount = Number(year.monthsCount || 10);
+    const addonTotal = ospMonthly * monthsCount;
+
+    const depositPayNow = qs("depositPayNow").checked;
+    const depositIncludedInTotal = qs("depositIncludedInTotal").checked;
+    const addonSpread = qs("addonSpread").checked;
+
+    // Discount applies to tuition only (common pattern). Could be configurable per school.
+    const tuitionDiscountAmount = tuition * discountRate;
+    const tuitionAfterDiscount = tuition - tuitionDiscountAmount;
+
+    const total = tuitionAfterDiscount
+      + (depositIncludedInTotal ? deposit : 0)
+      + addonTotal;
+
+    // Build breakdown
+    const items = [];
+    items.push({ label: "Eğitim ücreti (KDV dahil)", value: tuition });
+    items.push({ label: `İskonto (${fmtPct(discountRate)})`, value: -tuitionDiscountAmount });
+    items.push({ label: "İskontolu eğitim ücreti", value: tuitionAfterDiscount });
+
+    if (depositIncludedInTotal){
+      items.push({ label: "Kayıt teminatı (KDV dahil)", value: deposit });
+    } else {
+      items.push({ label: "Kayıt teminatı (toplama dahil değil)", value: deposit });
+    }
+
+    if (addonTotal > 0){
+      items.push({ label: `OSP toplam (${monthsCount} ay)`, value: addonTotal });
+    }
+
+    items.push({ label: "GENEL TOPLAM", value: total, strong: true });
+
+    renderBreakdown(items);
+
+    // KPIs
+    qs("kpiTotal").textContent = fmtTRY(total);
+    qs("kpiTotalSub").textContent =
+      `${school.name} • ${year.label} • ${plan.label}`;
+
+    qs("kpiDiscount").textContent = fmtTRY(tuitionDiscountAmount);
+    qs("kpiDiscountSub").textContent = `İskonto yalnızca eğitim ücretine uygulandı.`;
+
+    // Build schedule
+    const schedule = [];
+    const startMonth = qs("startMonth").value;
+
+    // Deposit schedule rule
+    if (depositPayNow){
+      schedule.push({
+        ym: startMonth,
+        label: "Teminat (peşin)",
+        amount: deposit
+      });
+    }
+
+    // What gets spread into installments?
+    const spreadBase =
+      tuitionAfterDiscount +
+      (addonSpread ? addonTotal : 0) +
+      (!depositPayNow && depositIncludedInTotal ? deposit : 0); // if not paying now and included, spread
+
+    // If deposit is included but paid now, it is not part of spreadBase
+    // If deposit not included in total but user chooses not pay now, we could still spread (school rule) — here: spread if not pay now.
+    const spreadDepositIfNotIncluded = (!depositIncludedInTotal && !depositPayNow) ? deposit : 0;
+    const spreadBase2 = spreadBase + spreadDepositIfNotIncluded;
+
+    const n = Number(opt.count);
+    if (n === 1){
+      // "Peşin" => one payment for spreadBase2, plus depositPayNow already added.
+      schedule.push({
+        ym: startMonth,
+        label: "Peşin ödeme",
+        amount: spreadBase2
+      });
+      if (!addonSpread && addonTotal > 0){
+        schedule.push({ ym: startMonth, label: "OSP (toplam) — taksite yayılmadı", amount: addonTotal });
+      }
+    } else {
+      const each = spreadBase2 / n;
+      for (let i=0; i<n; i++){
+        schedule.push({
+          ym: addMonths(startMonth, i),
+          label: `Taksit ${i+1}/${n}`,
+          amount: each
+        });
+      }
+      if (!addonSpread && addonTotal > 0){
+        schedule.push({ ym: startMonth, label: "OSP (toplam) — taksite yayılmadı", amount: addonTotal });
+      }
+    }
+
+    renderSchedule(schedule);
+
+    // Notes
+    const notes = (year.notes || []).map(x => `• ${x}`).join("<br>");
+    qs("planNotes").innerHTML = `<b>Notlar / Şartlar</b><br>${notes}`;
+    qs("planNotes").style.display = "block";
+
+    setStatus("Hesaplandı", false);
+  }
+
+  function renderBreakdown(items){
+    const el = qs("breakdown");
+    el.innerHTML = "";
+    for (const it of items){
+      const div = document.createElement("div");
+      div.className = "lineItem";
+      const l = document.createElement("div");
+      l.className = "l";
+      l.textContent = it.label;
+      const r = document.createElement("div");
+      r.className = "r";
+      r.textContent = fmtTRY(it.value);
+      if (it.strong){
+        r.style.fontSize = "14px";
+        r.style.fontWeight = "900";
+      }
+      if (it.value < 0) r.style.color = "var(--good)";
+      div.appendChild(l);
+      div.appendChild(r);
+      el.appendChild(div);
+    }
+  }
+
+  function renderSchedule(rows){
+    const tbody = qs("scheduleTable").querySelector("tbody");
+    tbody.innerHTML = "";
+
+    // Sort by month
+    rows.sort((a,b) => a.ym.localeCompare(b.ym));
+
+    // Merge same-month entries for display (keep separate rows)
+    for (const r of rows){
+      const tr = document.createElement("tr");
+      const td1 = document.createElement("td");
+      td1.textContent = monthLabel(r.ym);
+      const td2 = document.createElement("td");
+      td2.textContent = r.label;
+      const td3 = document.createElement("td");
+      td3.textContent = fmtTRY(r.amount);
+      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3);
+      tbody.appendChild(tr);
+    }
+  }
+
+  function setStatus(text, isError){
+    qs("statusPill").textContent = text;
+    qs("statusPill").style.color = isError ? "var(--bad)" : "var(--good)";
+  }
+
+  // ---------------------------
+  // Shareable link (query params)
+  // ---------------------------
+  function buildShareUrl(){
+    const params = new URLSearchParams();
+    params.set("school", qs("schoolSelect").value);
+    params.set("year", qs("yearSelect").value);
+    params.set("type", qs("planType").value);
+    params.set("n", qs("installments").value);
+    params.set("start", qs("startMonth").value);
+    params.set("osp", String(qs("ospMonthly").value || 0));
+    params.set("depNow", qs("depositPayNow").checked ? "1" : "0");
+    params.set("depInTotal", qs("depositIncludedInTotal").checked ? "1" : "0");
+    params.set("addonSpread", qs("addonSpread").checked ? "1" : "0");
+
+    const url = `${location.origin}${location.pathname}?${params.toString()}`;
+    qs("shareUrl").textContent = url;
+    qs("shareBox").style.display = "block";
+  }
+
+  function applyFromQuery(){
+    const p = new URLSearchParams(location.search);
+    const school = p.get("school");
+    const year = p.get("year");
+    const type = p.get("type");
+    const n = p.get("n");
+    const start = p.get("start");
+    const osp = p.get("osp");
+
+    if (school) qs("schoolSelect").value = school;
+    populateYears();
+    if (year) qs("yearSelect").value = year;
+
+    if (type) qs("planType").value = type;
+    populateInstallments();
+    if (n) qs("installments").value = n;
+
+    if (start) qs("startMonth").value = start;
+    if (osp !== null) qs("ospMonthly").value = osp;
+
+    const depNow = p.get("depNow");
+    const depInTotal = p.get("depInTotal");
+    const addonSpread = p.get("addonSpread");
+    if (depNow !== null) qs("depositPayNow").checked = depNow === "1";
+    if (depInTotal !== null) qs("depositIncludedInTotal").checked = depInTotal === "1";
+    if (addonSpread !== null) qs("addonSpread").checked = addonSpread === "1";
+
+    refreshMeta();
+    calculate();
+  }
+
+  // ---------------------------
+  // Data apply
+  // ---------------------------
+  function loadSampleDataToTextarea(){
+    qs("dataJson").value = JSON.stringify(DATA, null, 2);
+  }
+
+  function applyDataFromTextarea(){
+    try{
+      const parsed = JSON.parse(qs("dataJson").value);
+      // Basic sanity check
+      if (!parsed || !Array.isArray(parsed.schools)) throw new Error("Geçersiz JSON: schools bulunamadı.");
+      DATA = parsed;
+
+      // Repopulate selects
+      populateSchools();
+      populateYears();
+      populateInstallments();
+      refreshMeta();
+      setStatus("Veri uygulandı", false);
+      calculate();
+    }catch(e){
+      setStatus("JSON hatası", true);
+      alert("JSON okunamadı:\n" + e.message);
+    }
+  }
+
+  // ---------------------------
+  // Reset
+  // ---------------------------
+  function resetAll(){
+    DATA = structuredClone(SAMPLE_DATA);
+    populateSchools();
+    populateYears();
+    populateInstallments();
+    refreshMeta();
+    qs("ospMonthly").value = 0;
+    qs("depositPayNow").checked = true;
+    qs("depositIncludedInTotal").checked = true;
+    qs("addonSpread").checked = true;
+    qs("shareBox").style.display = "none";
+    loadSampleDataToTextarea();
+    setStatus("Sıfırlandı", false);
+    calculate();
+  }
+
+  // ---------------------------
+  // Wire-up events
+  // ---------------------------
+  function init(){
+    populateSchools();
+    populateYears();
+    populateInstallments();
+    refreshMeta();
+
+    loadSampleDataToTextarea();
+
+    qs("schoolSelect").addEventListener("change", () => {
+      populateYears();
+      populateInstallments();
+      refreshMeta();
+      calculate();
+    });
+    qs("yearSelect").addEventListener("change", () => {
+      populateInstallments();
+      refreshMeta();
+      calculate();
+    });
+    qs("planType").addEventListener("change", () => {
+      populateInstallments();
+      refreshMeta();
+      calculate();
+    });
+    qs("installments").addEventListener("change", () => {
+      refreshMeta();
+      calculate();
+    });
+
+    ["startMonth","ospMonthly","depositPayNow","depositIncludedInTotal","addonSpread"].forEach(id => {
+      qs(id).addEventListener("change", () => {
+        refreshMeta();
+        calculate();
+      });
+      qs(id).addEventListener("input", () => {
+        refreshMeta();
+        calculate();
+      });
+    });
+
+    qs("btnCalc").addEventListener("click", calculate);
+    qs("btnShare").addEventListener("click", buildShareUrl);
+    qs("btnReset").addEventListener("click", resetAll);
+    qs("btnApplyData").addEventListener("click", applyDataFromTextarea);
+    qs("btnLoadSample").addEventListener("click", () => {
+      resetAll();
+      setStatus("Örnek veri yüklendi", false);
+    });
+
+    // URL params
+    if (location.search && location.search.length > 1){
+      applyFromQuery();
+    } else {
+      calculate();
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
